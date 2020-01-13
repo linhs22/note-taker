@@ -44,23 +44,62 @@ app.get("/api/notes", function(req, res) {
     });
 });
 
-
+// Create New Note
 app.post("/api/notes", function(req, res) {
     // req.body hosts is equal to the JSON post sent from the user
     // This works because of our body parsing middleware
+    // Variable that will store new note content
     var newNote = req.body;
     readFileAsync("db/db.json", "utf8").then(function(data) {
         // Parse the JSON string to an object
         const noteData = JSON.parse(data);
 
+        // Conditional to create unique ID for each note
+        if (noteData.length >= 1) {
+            newNote.id = noteData[noteData.length - 1].id + 1;
+        } else {
+            newNote.id = 1;
+        }
+
+        //Push new note data into noteData array
+        noteData.push(newNote);
+
+        //stringify the noteData
+        const noteDataJSON = JSON.stringify(noteData);
+
+        // wrtie to the JSON file
+        writeFileAsync("db/db.json", noteDataJSON).then(function() {
+            console.log("Successfully wrote to db.json file");
+        });
     });
 
 });
 
 
+// Delete Note
+app.delete("/api/notes/:id", function(req, res) {
+    var deleteId = parseInt(req.params.id)
+    readFileAsync("db/db.json", "utf8").then(function(data) {
+        // Parse the JSON string to an object
+        const noteData = JSON.parse(data);
 
+        // Finds the ID that wants to be deleted
+        const removeId = noteData.findIndex(num => num.id === deleteId);
 
+        // Deletes the object containing that id
+        noteData.splice(removeId, 1);
 
+        //stringify the noteData
+        const noteDataJSON = JSON.stringify(noteData);
+
+        // wrtie to the JSON file
+        writeFileAsync("db/db.json", noteDataJSON).then(function() {
+            console.log("Successfully deleted on db.json file");
+        });
+        res.json(noteData)
+    });
+
+});
 
 
 
